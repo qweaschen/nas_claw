@@ -4,6 +4,7 @@ import ConnectionPage from './pages/ConnectionPage';
 import BrowserPage from './pages/BrowserPage';
 import ScrapePage from './pages/ScrapePage';
 import SettingsPage from './pages/SettingsPage';
+import appIcon from '../build/icon.png';
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
       <div className="titlebar-drag-region"></div>
       <div className="sidebar">
         <div className="logo-container">
-          <img src="/icon.png?v=anime-20260512" alt="Jav Claw" style={{ width: '36px', height: '36px', borderRadius: '8px' }} />
+          <img src={appIcon} alt="Jav Claw" style={{ width: '36px', height: '36px', borderRadius: '8px' }} />
           <h1>Jav Claw</h1>
         </div>
         <nav className="nav-links">
