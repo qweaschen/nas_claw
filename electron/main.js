@@ -198,18 +198,43 @@ async function cleanupEmptyParents(dirPath, scanRoot, isRemote) {
 let mainWindow;
 const isDev = !app.isPackaged;
 
+function writeStartupLog(message, err) {
+  try {
+    const logDir = app.getPath('userData');
+    fs.mkdirSync(logDir, { recursive: true });
+    const detail = err ? `\n${err.stack || err.message || String(err)}` : '';
+    fs.appendFileSync(
+      path.join(logDir, 'startup.log'),
+      `[${new Date().toISOString()}] ${message}${detail}\n`,
+      'utf-8'
+    );
+  } catch {}
+}
+
+process.on('uncaughtException', (err) => {
+  writeStartupLog('uncaughtException', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  writeStartupLog('unhandledRejection', err);
+});
+
 // Scrape control flags
 let scrapeControl = { paused: false, stopped: false };
 let scanControl = { canceled: false };
 
 function createWindow() {
+  const windowIcon = isDev
+    ? path.join(__dirname, '..', 'build', 'icon.png')
+    : path.join(process.resourcesPath, 'icon.icns');
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1100,
     minHeight: 700,
     title: 'Jav Claw',
-    icon: path.join(__dirname, '..', 'build', 'icon.png'),
+    icon: windowIcon,
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#0a0a1a',
     webPreferences: {
@@ -225,9 +250,18 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+
+  mainWindow.webContents.on('did-fail-load', (_, errorCode, errorDescription, validatedURL) => {
+    writeStartupLog(`did-fail-load ${errorCode} ${errorDescription} ${validatedURL}`);
+  });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  writeStartupLog(`app ready packaged=${app.isPackaged} resourcesPath=${process.resourcesPath}`);
+  createWindow();
+}).catch((err) => {
+  writeStartupLog('app.whenReady failed', err);
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 

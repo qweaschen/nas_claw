@@ -26,6 +26,7 @@
       "target": [
         "dmg"
       ],
+      "identity": null,
       "icon": "build/icon.icns"
     },
     "win": {
